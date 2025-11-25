@@ -1,5 +1,3 @@
-# deploy
-
 # 🐳 Docker 化部署
 
 ## 部署目录
@@ -37,8 +35,10 @@ ai-agent-platform/
 
 ## 🚀 一键部署
 
-项目根目录运行：bash deploy/deploy.sh
-
+项目根目录运行：
+```
+bash deploy/deploy.sh
+```
 这将自动执行：
 - 停止旧容器
 - 删除旧数据卷
@@ -48,17 +48,23 @@ ai-agent-platform/
 
 ## 💡 手动部署（如需）
 后端打包：
+```
 cd backend/core
 mvn clean package -DskipTests
+```
 
 前端打包：
+```
 cd frontend
 npm install
 npm run build
+```
 
 使用 Docker Compose 启动：
+```
 cd deploy
 docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+```
 
 ## 🌐 服务访问说明
 模块	地址
@@ -74,23 +80,20 @@ Nginx API 代理（前端访问后端）	http://localhost/api/
 ## 🧪 测试 Docker 状态
 
 查看容器：
-
+```
 docker ps
-
+```
 
 查看日志：
-
+```
 docker logs aiagent-frontend
 docker logs aiagent-backend
 docker logs aiagent-mysql
+```
 
 ## 🎉 部署成功标志
-检查项	状态
-http://localhost
- 正常打开前端	✔
-前端能调用后端（/api/v1/hello）	✔
-后端 API 正常（http://localhost:8080/doc.html）
-	✔
-后端健康检查：http://localhost/api/v1/hello
-MySQL 启动成功	✔
-所有容器状态为 Up	✔
+- 正常打开前端：http://localhost
+- 后端 API 正常：http://localhost:8080/doc.html
+- 后端健康检查：http://localhost/api/v1/hello
+- MySQL 启动成功	✔
+- 所有容器状态为 Up	✔
