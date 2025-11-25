@@ -3,6 +3,7 @@
 # 🐳 Docker 化部署
 
 ## 部署目录
+```
 ai-agent-platform/
 ├── frontend/                 # Vue3 + Vite 前端
 │   ├── Dockerfile
@@ -24,7 +25,7 @@ ai-agent-platform/
 │   └── deploy.sh            # 一键启动脚本
 │
 └── README.md
-
+```
 ---
 
 ## 🔧 环境要求
