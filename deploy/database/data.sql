@@ -127,5 +127,27 @@ INSERT INTO `ai_agent_platform_db`.`system_config` (`id`, `config_key`, `config_
 ('config_003', 'enable_registration', 'true', '是否开放注册');
 */
 
+
+-- ============================================================
+-- 11. LLM提供商表 (llm_providers) - 初始数据
+-- ------------------------------------------------------------
+INSERT INTO `llm_providers` (`id`, `code`, `name`, `title`, `description`, `apply_url`, `doc_url`, `default_api_base`, `has_free_quota`, `tag_type`, `country`, `sort_order`, `is_active`, `created_at`, `updated_at`) VALUES
+('provider-001-qwen', 'qwen', '通义千问', '阿里云通义千问（模型服务平台百炼）', '阿里云自研的大语言模型，支持中文对话、代码生成、Function Calling 等功能。提供 Turbo、Plus、Max 等多个版本，性能强劲，响应快速。', 'https://dashscope.console.aliyun.com/', 'https://help.aliyun.com/zh/model-studio/qwen-api-reference', 'https://dashscope.aliyuncs.com/compatible-mode/v1', 1, 'primary', 'cn', 1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('provider-002-doubao', 'doubao', '豆包', '火山引擎豆包（字节跳动）', '字节跳动自研的大语言模型，推理能力强，响应快速。支持多种场景应用，包括对话、文本生成、Kimi长文本等。火山引擎方舟平台提供稳定的API服务。', 'https://console.volcengine.com/ark', 'https://www.volcengine.com/docs/82379/1330310', 'https://ark.cn-beijing.volces.com/api/v3', 1, 'success', 'cn', 10, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('provider-003-openai', 'openai', 'OpenAI', 'OpenAI GPT系列', 'OpenAI 提供的 GPT 系列大语言模型，包括 GPT-3.5、GPT-4 等，业界领先的对话和生成能力。', 'https://platform.openai.com/', 'https://platform.openai.com/docs/api-reference', 'https://api.openai.com/v1', 0, 'info', 'us', 20, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+
+-- ============================================================
+-- 12. LLM模型表 (llm_models) - 初始数据
+-- 注意：API密钥需要自行配置
+-- ------------------------------------------------------------
+INSERT INTO `llm_models` (`id`, `name`, `display_name`, `provider`, `model_type`, `api_base`, `api_key`, `max_tokens`, `temperature`, `top_p`, `enable_deep_thinking`, `frequency_penalty`, `presence_penalty`, `config`, `description`, `is_active`, `is_default`, `is_system`, `sort_order`, `created_at`, `updated_at`) VALUES
+('model-001-qwen-turbo', 'qwen-turbo', '通义千问-Turbo', 'qwen', 'chat', 'https://dashscope.aliyuncs.com/compatible-mode/v1', 'YOUR_API_KEY_HERE', 8192, 0.70, 0.90, 0, 0.00, 0.00, NULL, '阿里云通义千问大语言模型，性能强劲，响应快速，适合对话场景', 1, 1, 1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('model-002-qwen-plus', 'qwen-plus', '通义千问-Plus', 'qwen', 'chat', 'https://dashscope.aliyuncs.com/compatible-mode/v1', 'YOUR_API_KEY_HERE', 32768, 0.70, 0.90, 0, 0.00, 0.00, NULL, '阿里云通义千问Plus版本，更强大的理解和生成能力', 1, 0, 1, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('model-003-qwen-max', 'qwen-max', '通义千问-Max', 'qwen', 'chat', 'https://dashscope.aliyuncs.com/compatible-mode/v1', 'YOUR_API_KEY_HERE', 8192, 0.70, 0.90, 0, 0.00, 0.00, NULL, '阿里云通义千问Max版本，最强理解能力，适合复杂任务', 1, 0, 1, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('model-004-doubao-pro', 'doubao-pro-32k', '豆包-Pro-32k', 'doubao', 'chat', 'https://ark.cn-beijing.volces.com/api/v3', 'YOUR_API_KEY_HERE', 32768, 0.70, 0.90, 0, 0.00, 0.00, NULL, '字节跳动豆包Pro版本，支持32k上下文，适合长文本处理', 1, 0, 1, 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('model-005-gpt35-turbo', 'gpt-3.5-turbo', 'GPT-3.5 Turbo', 'openai', 'chat', 'https://api.openai.com/v1', 'YOUR_API_KEY_HERE', 4096, 0.70, 1.00, 0, 0.00, 0.00, NULL, 'OpenAI GPT-3.5 Turbo 模型，快速高效，性价比高', 1, 0, 1, 20, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('model-006-gpt4', 'gpt-4', 'GPT-4', 'openai', 'chat', 'https://api.openai.com/v1', 'YOUR_API_KEY_HERE', 8192, 0.70, 1.00, 0, 0.00, 0.00, NULL, 'OpenAI GPT-4 模型，更强大的推理和理解能力', 1, 0, 1, 21, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
 SET FOREIGN_KEY_CHECKS = 1;
 

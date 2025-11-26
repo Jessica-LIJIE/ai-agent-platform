@@ -14,6 +14,8 @@
 | `plugin` | 存储插件注册信息及状态 | US-014, US-015, US-016 |
 | `system_log` | 存储系统操作日志及审计信息 | US-023 |
 | `system_config` | 存储系统全局配置信息 | US-022 |
+| `llm_providers` | 存储LLM提供商信息 | US-022 |
+| `llm_models` | 存储LLM模型配置信息 | US-022 |
 
 ## 2. 详细表设计
 
@@ -303,6 +305,79 @@
   - `enable_registration`: 是否开放注册（true/false）
 - 读取优化：该表为高频读取场景，建议应用层做缓存
 
+### 2.11 llm_providers 表（LLM提供商表）
+
+#### 设计理由
+用于存储大语言模型提供商的基本信息和配置，支持多提供商管理，方便用户选择不同的LLM服务，对应系统配置模块的用户故事。
+
+#### 字段设计
+
+| 字段名 | 类型 | 约束 | 含义 |
+|--------|------|------|------|
+| `id` | VARCHAR(64) | PRIMARY KEY | 提供商唯一标识 |
+| `code` | VARCHAR(50) | NOT NULL, UNIQUE | 提供商代码（如qwen、doubao） |
+| `name` | VARCHAR(100) | NOT NULL | 提供商名称 |
+| `title` | VARCHAR(200) | NOT NULL | 提供商完整标题 |
+| `description` | TEXT | NULL | 提供商描述 |
+| `apply_url` | VARCHAR(500) | NULL | API申请地址 |
+| `doc_url` | VARCHAR(500) | NULL | 文档地址 |
+| `default_api_base` | VARCHAR(500) | NULL | 默认API地址 |
+| `has_free_quota` | TINYINT(1) | NOT NULL, DEFAULT 0 | 是否提供免费额度 |
+| `icon` | VARCHAR(200) | NULL | 图标URL或图标名称 |
+| `tag_type` | VARCHAR(20) | NULL | 标签类型（primary/success/warning等） |
+| `country` | VARCHAR(20) | NULL | 国家代码 |
+| `sort_order` | INT | NOT NULL, DEFAULT 0 | 排序顺序 |
+| `is_active` | TINYINT(1) | NOT NULL, DEFAULT 1 | 是否启用 |
+| `created_at` | DATETIME | NOT NULL, DEFAULT CURRENT_TIMESTAMP | 创建时间 |
+| `updated_at` | DATETIME | NOT NULL, DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 更新时间 |
+
+#### 约束说明
+- 唯一索引：`code` 确保提供商代码唯一
+- 布尔字段：`has_free_quota` 和 `is_active` 使用 TINYINT(1) 类型
+- 排序支持：通过 `sort_order` 字段控制前端显示顺序
+- 标签类型：`tag_type` 用于前端UI展示不同的标签样式
+
+### 2.12 llm_models 表（LLM模型表）
+
+#### 设计理由
+用于存储大语言模型的详细配置信息，包括API密钥、参数设置等，支持多模型管理和切换，对应系统配置和智能体模型配置功能。
+
+#### 字段设计
+
+| 字段名 | 类型 | 约束 | 含义 |
+|--------|------|------|------|
+| `id` | VARCHAR(64) | PRIMARY KEY | 模型唯一标识 |
+| `name` | VARCHAR(100) | NOT NULL | 模型名称（如qwen-turbo） |
+| `display_name` | VARCHAR(100) | NOT NULL | 模型显示名称 |
+| `provider` | VARCHAR(50) | NOT NULL | 提供商代码 |
+| `model_type` | VARCHAR(50) | NULL | 模型类型（chat/embedding等） |
+| `api_base` | VARCHAR(500) | NULL | API基础URL |
+| `api_key` | VARCHAR(500) | NULL | API密钥（加密存储） |
+| `api_version` | VARCHAR(50) | NULL | API版本 |
+| `max_tokens` | INT | NULL | 最大token数 |
+| `temperature` | DECIMAL(3,2) | NULL | 温度参数（0.00-2.00） |
+| `top_p` | DECIMAL(3,2) | NULL | top_p参数（0.00-1.00） |
+| `enable_deep_thinking` | TINYINT(1) | NOT NULL, DEFAULT 0 | 是否启用深度思考 |
+| `frequency_penalty` | DECIMAL(3,2) | NOT NULL, DEFAULT 0.00 | 频率惩罚参数 |
+| `presence_penalty` | DECIMAL(3,2) | NOT NULL, DEFAULT 0.00 | 存在惩罚参数 |
+| `config` | JSON | NULL | 其他配置参数 |
+| `description` | TEXT | NULL | 模型描述 |
+| `is_active` | TINYINT(1) | NOT NULL, DEFAULT 1 | 是否激活 |
+| `is_default` | TINYINT(1) | NOT NULL, DEFAULT 0 | 是否默认模型 |
+| `is_system` | TINYINT(1) | NOT NULL, DEFAULT 0 | 是否系统内置 |
+| `sort_order` | INT | NOT NULL, DEFAULT 0 | 排序顺序 |
+| `created_at` | DATETIME | NOT NULL, DEFAULT CURRENT_TIMESTAMP | 创建时间 |
+| `updated_at` | DATETIME | NOT NULL, DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 更新时间 |
+
+#### 约束说明
+- 提供商关联：`provider` 字段关联 `llm_providers.code`（逻辑外键）
+- 参数范围：`temperature` 和 `top_p` 使用 DECIMAL 类型确保精度
+- 布尔字段：`is_active`、`is_default`、`is_system` 使用 TINYINT(1) 类型
+- JSON配置：`config` 字段用于存储扩展配置参数，提供灵活性
+- 默认模型：通过 `is_default` 标识系统默认使用的模型
+- 系统内置：`is_system` 标识不可删除的系统预置模型
+- 安全性：`api_key` 字段应在应用层加密后存储
+
 ## 3. 表关系说明
 
 ```mermaid
@@ -388,6 +463,21 @@ erDiagram
         VARCHAR config_key UK
         TEXT config_value
     }
+    LLM_PROVIDERS {
+        VARCHAR id PK
+        VARCHAR code UK
+        VARCHAR name
+        VARCHAR default_api_base
+        TINYINT is_active
+    }
+    LLM_MODELS {
+        VARCHAR id PK
+        VARCHAR name
+        VARCHAR provider
+        VARCHAR api_key
+        TINYINT is_active
+        TINYINT is_default
+    }
     
     USER ||--o{ AGENT : "creates"
     USER ||--o{ AGENT_CONVERSATION : "has"
@@ -457,3 +547,7 @@ erDiagram
 | system_log | 普通索引 | (user_id) | 按用户查询操作历史 |
 | system_config | 唯一索引 | (config_key) | 确保配置键唯一 |
 | workflow | 普通索引 | (agent_id) | 快速查询智能体的工作流 |
+| llm_providers | 唯一索引 | (code) | 确保提供商代码唯一 |
+| llm_providers | 普通索引 | (is_active) | 快速查询启用的提供商 |
+| llm_models | 普通索引 | (provider) | 快速查询特定提供商的模型 |
+| llm_models | 普通索引 | (is_active, is_default) | 快速查询启用和默认模型 |

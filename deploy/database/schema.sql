@@ -256,6 +256,66 @@ CREATE TABLE IF NOT EXISTS `ai_agent_platform_db`.`system_config` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统配置表';
 
 -- ============================================================
+-- 11. LLM提供商表 (llm_providers)
+-- 功能: 存储LLM提供商信息
+-- 关联用户故事: US-022
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `ai_agent_platform_db`.`llm_providers` (
+    `id` VARCHAR(64) NOT NULL COMMENT '提供商唯一标识',
+    `code` VARCHAR(50) NOT NULL COMMENT '提供商代码',
+    `name` VARCHAR(100) NOT NULL COMMENT '提供商名称',
+    `title` VARCHAR(200) NOT NULL COMMENT '提供商完整标题',
+    `description` TEXT DEFAULT NULL COMMENT '提供商描述',
+    `apply_url` VARCHAR(500) DEFAULT NULL COMMENT 'API申请地址',
+    `doc_url` VARCHAR(500) DEFAULT NULL COMMENT '文档地址',
+    `default_api_base` VARCHAR(500) DEFAULT NULL COMMENT '默认API地址',
+    `has_free_quota` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否提供免费额度',
+    `icon` VARCHAR(200) DEFAULT NULL COMMENT '图标URL或图标名称',
+    `tag_type` VARCHAR(20) DEFAULT NULL COMMENT '标签类型',
+    `country` VARCHAR(20) DEFAULT NULL COMMENT '国家',
+    `sort_order` INT NOT NULL DEFAULT 0 COMMENT '排序顺序',
+    `is_active` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '是否启用',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_code` (`code`),
+    KEY `idx_is_active` (`is_active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='LLM提供商表';
+
+-- ============================================================
+-- 12. LLM模型表 (llm_models)
+-- 功能: 存储LLM模型配置信息
+-- 关联用户故事: US-022
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `ai_agent_platform_db`.`llm_models` (
+    `id` VARCHAR(64) NOT NULL COMMENT '模型唯一标识',
+    `name` VARCHAR(100) NOT NULL COMMENT '模型名称',
+    `display_name` VARCHAR(100) NOT NULL COMMENT '模型显示名称',
+    `provider` VARCHAR(50) NOT NULL COMMENT '提供商代码',
+    `model_type` VARCHAR(50) DEFAULT NULL COMMENT '模型类型',
+    `api_base` VARCHAR(500) DEFAULT NULL COMMENT 'API基础URL',
+    `api_key` VARCHAR(500) DEFAULT NULL COMMENT 'API密钥',
+    `api_version` VARCHAR(50) DEFAULT NULL COMMENT 'API版本',
+    `max_tokens` INT DEFAULT NULL COMMENT '最大token数',
+    `temperature` DECIMAL(3,2) DEFAULT NULL COMMENT '温度参数',
+    `top_p` DECIMAL(3,2) DEFAULT NULL COMMENT 'top_p参数',
+    `enable_deep_thinking` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否启用深度思考',
+    `frequency_penalty` DECIMAL(3,2) NOT NULL DEFAULT 0.00 COMMENT '频率惩罚参数',
+    `presence_penalty` DECIMAL(3,2) NOT NULL DEFAULT 0.00 COMMENT '存在惩罚参数',
+    `config` JSON DEFAULT NULL COMMENT '其他配置参数',
+    `description` TEXT DEFAULT NULL COMMENT '模型描述',
+    `is_active` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '是否激活',
+    `is_default` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否默认模型',
+    `is_system` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否系统内置',
+    `sort_order` INT NOT NULL DEFAULT 0 COMMENT '排序顺序',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_provider` (`provider`),
+    KEY `idx_is_active_is_default` (`is_active`, `is_default`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='LLM模型表';
+
+-- ============================================================
 -- 初始化系统配置数据
 -- ============================================================
 INSERT INTO `ai_agent_platform_db`.`system_config` (`id`, `config_key`, `config_value`, `description`) VALUES
