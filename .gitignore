@@ -1,0 +1,23 @@
+# Ignore IDE project files
+.idea/
+.vscode/
+*.iml
+
+# Ignore OS generated files
+.DS_Store
+Thumbs.db
+
+# Ignore node modules
+node_modules/
+dist/
+build/
+
+# Ignore environment files
+.env
+.env.local
+
+
+# Ignore python files
+venv/
+__pycache__/
+*.pyc
