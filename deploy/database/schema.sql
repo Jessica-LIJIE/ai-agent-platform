@@ -66,7 +66,6 @@ CREATE TABLE IF NOT EXISTS `ai_agent_platform_db`.`agent` (
     `tools_config` JSON DEFAULT NULL COMMENT '绑定的插件配置（JSON数组存储插件ID列表）',
     `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    `deleted_at` DATETIME DEFAULT NULL COMMENT '软删除时间',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_user_name` (`user_id`, `name`),
     KEY `idx_user_status` (`user_id`, `status`),
@@ -157,7 +156,6 @@ CREATE TABLE IF NOT EXISTS `ai_agent_platform_db`.`knowledge_base` (
     `user_id` VARCHAR(64) NOT NULL COMMENT '创建者ID',
     `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    `deleted_at` DATETIME DEFAULT NULL COMMENT '软删除时间',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_user_name` (`user_id`, `name`),
     CONSTRAINT `fk_kb_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE

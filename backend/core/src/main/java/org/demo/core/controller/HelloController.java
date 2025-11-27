@@ -1,6 +1,6 @@
-package org.demo.core.module.hello.controller;
+package org.demo.core.controller;
 
-import org.demo.core.common.api.ApiResponse;
+import org.demo.core.api.ApiResponse;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

@@ -1,3 +1,40 @@
+# 示例使用环境变量兜底，便于本地/服务器通过环境变量安全注入。
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
 spring:
   application:
-    name: Core
+    name: ai-agent-platform-core
+  profiles:
+    active: dev
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/ai_agent_platform_db?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf8&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:123456}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+
+# MyBatis Plus 配置
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 开启SQL日志输出
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      id-type: assign_id # 使用雪花算法生成ID
+
+# 开发环境日志级别
+logging:
+  level:
+    root: INFO
+    org.demo.core.mapper: DEBUG # 开启Mapper层日志

@@ -1,4 +1,4 @@
-package org.demo.core.common.api;
+package org.demo.core.api;
 
 import lombok.Data;
 

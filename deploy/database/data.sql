@@ -65,7 +65,7 @@ INSERT INTO `agent_conversation` (`id`, `session_id`, `agent_id`, `user_id`, `qu
 -- ------------------------------------------------------------
 INSERT INTO `workflow` (`id`, `name`, `description`, `definition`, `graph_data`, `is_valid`, `status`, `user_id`, `create_time`) VALUES
 ('wf-001-home-ctrl', '智能家居控制与反馈', '根据用户请求，执行灯光控制或温度查询，并提供知识库支持。', '{"nodes": ["start", "check_intent", "call_plugin", "llm_feedback"], "edges": []}', '{"nodes": [], "edges": []}', TRUE, 'active', 'user-002-home', '2025-11-20 09:00:00'),
-('wf-002-auto-off', '定时关闭卧室灯', '每天晚上11点检查卧室灯状态，如果开启则自动关闭。', '{"nodes": ["cron_trigger", "check_status", "call_led_off"], "edges": []}', TRUE, 'active', 'user-002-home', '2025-11-21 15:00:00');
+('wf-002-auto-off', '定时关闭卧室灯', '每天晚上11点检查卧室灯状态,如果开启则自动关闭。', '{"nodes": ["cron_trigger", "check_status", "call_led_off"], "edges": []}', '{"nodes": [], "edges": []}', TRUE, 'active', 'user-002-home', '2025-11-21 15:00:00');
 
 
 -- ============================================================

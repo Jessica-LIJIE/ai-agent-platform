@@ -75,7 +75,6 @@
 | `tools_config` | JSON | NULL | 绑定的插件配置（JSON数组存储插件ID列表，US-016） |
 | `create_time` | DATETIME | NOT NULL, DEFAULT CURRENT_TIMESTAMP | 创建时间 |
 | `update_time` | DATETIME | NOT NULL, DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 更新时间（US-003编辑功能） |
-| `deleted_at` | DATETIME | NULL | 软删除时间（US-005） |
 
 #### 约束说明
 - 联合唯一索引：`(user_id, name)` 确保同一用户下智能体名称不重复
@@ -84,7 +83,6 @@
   - `model_config`：存储大模型参数（如 {"model": "gpt-4", "temperature": 0.7}）
   - `kb_ids`：存储知识库ID数组（如 [1, 2, 3]）
   - `tools_config`：存储插件ID数组（如 ["plugin_1", "plugin_2"]）
-- 软删除：通过 `deleted_at` 字段实现，保障数据可恢复性
 
 ### 2.3 agent_conversation 表（智能体对话历史表）
 
@@ -184,12 +182,11 @@
 | `user_id` | VARCHAR(64) | NOT NULL, FOREIGN KEY | 创建者ID（关联用户表，US-010权限控制） |
 | `create_time` | DATETIME | NOT NULL, DEFAULT CURRENT_TIMESTAMP | 创建时间 |
 | `update_time` | DATETIME | NOT NULL, DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 更新时间 |
-| `deleted_at` | DATETIME | NULL | 软删除时间（US-010） |
 
 #### 约束说明
 - 联合唯一索引：`(user_id, name)` 确保同一用户下知识库名称不重复
 - `embedding_model` 字段用于记录向量化模型，确保RAG检索时使用正确的Embedding接口
-- 软删除：通过 `deleted_at` 字段实现，删除时同步级联删除关联文档（US-010 AC3）
+- 级联删除：删除知识库时同步级联删除关联文档（US-010 AC3）
 
 ### 2.7 document 表（文档表）
 
@@ -522,7 +519,6 @@ erDiagram
    - 智能体与工作流/知识库为松散关联（ON DELETE SET NULL）：删除工作流/知识库时仅解除绑定，不删除智能体
    - 知识库与文档为强关联（ON DELETE CASCADE）：删除知识库时同步删除关联文档（US-010 AC3）
    - 工作流与智能体为强关联（ON DELETE CASCADE）：删除智能体时同步删除关联工作流
-   - 软删除策略：agent、knowledge_base 表通过 `deleted_at` 实现软删除，保障数据可恢复性
 
 ## 4. 索引设计
 
