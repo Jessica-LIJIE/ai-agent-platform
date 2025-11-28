@@ -5,6 +5,8 @@ import router from './router'
 
 // 新增：引入 Tailwind 的入口样式文件（让所有 Tailwind 工具类在全局生效）
 import './styles/tailwind.css'
+// 引入全局样式
+import './styles/index.css'
 
 /* 新增：引入 Element Plus 组件库（JS 逻辑） */
 import ElementPlus from 'element-plus'

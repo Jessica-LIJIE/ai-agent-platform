@@ -2,6 +2,9 @@ import axios from 'axios'
 
 const BASE_API = import.meta.env.VITE_BASE_API || '/api'
 
+// 是否启用 Mock（默认 true，可通过环境变量控制）
+const USE_MOCK = (import.meta.env.VITE_USE_MOCK ?? 'true') !== 'false'
+
 const http = axios.create({
   baseURL: BASE_API,
   timeout: 15000,
@@ -43,6 +46,7 @@ http.interceptors.response.use(
   },
   (error) => {
     if (error.response) {
+      // 后端返回了响应，但可能有错误
       const p = error.response.data
       const msg = p?.message || `HTTP ${error.response.status}`
       const err = new Error(msg) as any
@@ -50,6 +54,7 @@ http.interceptors.response.use(
       err.response = error.response
       throw err
     } else if (error.request) {
+      // 网络错误
       throw new Error('网络不可用或服务器无响应')
     } else {
       throw new Error(error.message || '请求发生错误')
@@ -58,4 +63,4 @@ http.interceptors.response.use(
 )
 
 export { http }
-
+export { USE_MOCK }
