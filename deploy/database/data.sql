@@ -19,6 +19,7 @@ DELETE FROM `workflow_run`;
 DELETE FROM `agent_conversation`;
 DELETE FROM `agent`;
 DELETE FROM `workflow`;
+DELETE FROM `plugin_operation`;
 DELETE FROM `plugin`;
 DELETE FROM `document`;
 DELETE FROM `knowledge_base`;
@@ -99,10 +100,21 @@ INSERT INTO `document` (`id`, `filename`, `file_name`, `file_url`, `file_path`, 
 -- ============================================================
 -- 8. 插件表 (plugin) - 增加一个第三方插件
 -- ------------------------------------------------------------
-INSERT INTO `plugin` (`id`, `name`, `identifier`, `description`, `openapi_spec`, `status`, `is_enabled`, `auth_type`, `user_id`, `create_time`) VALUES
-('plugin-001-led', '智能灯光控制', 'led_controller', '用于开启、关闭和调整智能LED灯的亮度或颜色。', '{"openapi": "3.0.0", "info": {"title": "LED Control API"}, "paths": {"/light/on": {}, "/light/off": {}}}', 'enabled', TRUE, 'api_key', 'user-002-home', '2025-11-15 10:00:00'),
-('plugin-002-temp', '室内温度查询', 'temperature_sensor', '获取当前房间的实时温度和湿度数据。', '{"openapi": "3.0.0", "info": {"title": "Temperature API"}, "paths": {"/sensor/current_temp": {}}}', 'enabled', TRUE, 'none', 'user-002-home', '2025-11-15 11:30:00'),
-('plugin-003-calendar', '家庭日程提醒', 'family_calendar', '用于查询和添加家庭共享日历事件。', '{"openapi": "3.0.0", "info": {"title": "Calendar API"}, "paths": {"/events": {}}}', 'disabled', FALSE, 'oauth', 'user-004-dev', '2025-11-18 14:00:00');
+INSERT INTO `plugin` (`id`, `name`, `identifier`, `description`, `type`, `base_url`, `openapi_spec`, `status`, `is_enabled`, `auth_type`, `user_id`, `create_time`) VALUES
+('plugin-001-led', '智能灯光控制', 'led_controller', '用于开启、关闭和调整智能LED灯的亮度或颜色。', 'http', 'https://plugin.smarthome.local', '{"openapi": "3.0.0", "info": {"title": "LED Control API"}, "paths": {"/light/on": {}, "/light/off": {}}}', 'enabled', TRUE, 'api_key', 'user-002-home', '2025-11-15 10:00:00'),
+('plugin-002-temp', '室内温度查询', 'temperature_sensor', '获取当前房间的实时温度和湿度数据。', 'http', 'https://plugin.smarthome.local', '{"openapi": "3.0.0", "info": {"title": "Temperature API"}, "paths": {"/sensor/current_temp": {}}}', 'enabled', TRUE, 'none', 'user-002-home', '2025-11-15 11:30:00'),
+('plugin-003-calendar', '家庭日程提醒', 'family_calendar', '用于查询和添加家庭共享日历事件。', 'http', 'https://calendar.api.local', '{"openapi": "3.0.0", "info": {"title": "Calendar API"}, "paths": {"/events": {}}}', 'disabled', FALSE, 'oauth', 'user-004-dev', '2025-11-18 14:00:00');
+
+
+-- ============================================================
+-- 9. 插件操作表 (plugin_operation) - 插件接口操作数据
+-- ------------------------------------------------------------
+INSERT INTO `plugin_operation` (`id`, `plugin_id`, `operation_id`, `name`, `method`, `path`, `description`, `input_schema`, `output_schema`, `create_time`) VALUES
+('op-001-led-on', 'plugin-001-led', 'turnOnLight', '开灯', 'POST', '/light/on', '打开指定位置的LED灯', '{"type": "object", "properties": {"location": {"type": "string", "description": "位置"}}}', '{"type": "object", "properties": {"success": {"type": "boolean"}}}', '2025-11-15 10:00:00'),
+('op-002-led-off', 'plugin-001-led', 'turnOffLight', '关灯', 'POST', '/light/off', '关闭指定位置的LED灯', '{"type": "object", "properties": {"location": {"type": "string", "description": "位置"}}}', '{"type": "object", "properties": {"success": {"type": "boolean"}}}', '2025-11-15 10:00:00'),
+('op-003-temp-get', 'plugin-002-temp', 'getCurrentTemp', '获取当前温度', 'GET', '/sensor/current_temp', '获取当前房间的实时温度和湿度', '{"type": "object", "properties": {"room": {"type": "string", "description": "房间名称"}}}', '{"type": "object", "properties": {"temperature": {"type": "number"}, "humidity": {"type": "number"}}}', '2025-11-15 11:30:00'),
+('op-004-calendar-list', 'plugin-003-calendar', 'listEvents', '查询日程', 'GET', '/events', '查询家庭共享日历事件列表', '{"type": "object", "properties": {"date": {"type": "string", "format": "date"}}}', '{"type": "array", "items": {"type": "object", "properties": {"title": {"type": "string"}, "time": {"type": "string"}}}}', '2025-11-18 14:00:00'),
+('op-005-calendar-add', 'plugin-003-calendar', 'addEvent', '添加日程', 'POST', '/events', '添加新的家庭日历事件', '{"type": "object", "properties": {"title": {"type": "string"}, "date": {"type": "string"}, "time": {"type": "string"}}}', '{"type": "object", "properties": {"id": {"type": "string"}, "success": {"type": "boolean"}}}', '2025-11-18 14:00:00');
 
 
 -- ============================================================

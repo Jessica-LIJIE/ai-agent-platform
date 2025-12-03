@@ -86,3 +86,8 @@ export const deleteAgent = async (id: string): Promise<void> => {
   }
   return http.delete(`/v1/agents/${id}`)
 }
+
+/**
+ * 获取智能体详情（getAgentById的别名）
+ */
+export const getAgentDetail = getAgentById

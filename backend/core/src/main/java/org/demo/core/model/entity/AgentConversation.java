@@ -10,6 +10,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 智能体对话历史实体类
@@ -101,7 +102,20 @@ public class AgentConversation {
      * 类型（chat/debug）
      */
     @TableField("conversation_type")
-    private String conversationType;
+    private String conversationType = "chat"; // 默认为chat类型
+
+    /**
+     * 可选的前端请求中携带的插件调用指令（仅在请求/内存中使用，不持久化）
+     */
+    @TableField(exist = false)
+    private PluginCall pluginCall;
+
+    @Data
+    public static class PluginCall {
+        private String pluginId;
+        private String operationId;
+        private Map<String, Object> params;
+    }
 
     /**
      * 创建时间

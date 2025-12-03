@@ -6,6 +6,27 @@
     :close-on-click-modal="false"
     @close="handleClose"
   >
+    <!-- JSON 文件导入区域 -->
+    <div class="import-section">
+      <el-upload
+        ref="uploadRef"
+        class="json-upload"
+        :auto-upload="false"
+        :show-file-list="false"
+        accept=".json"
+        :on-change="handleFileChange"
+      >
+        <template #trigger>
+          <el-button type="primary" :icon="Upload">
+            导入 OpenAPI JSON 文件
+          </el-button>
+        </template>
+      </el-upload>
+      <span class="import-tip">支持 OpenAPI 3.0 规范的 JSON 文件，导入后将自动填充表单</span>
+    </div>
+
+    <el-divider />
+
     <el-form
       ref="formRef"
       :model="formData"
@@ -99,7 +120,8 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
+import { ElMessage, type FormInstance, type FormRules, type UploadInstance, type UploadFile } from 'element-plus'
+import { Upload } from '@element-plus/icons-vue'
 import { usePluginStore } from '@/stores/usePluginStore'
 import type { Plugin } from '@/types/entity'
 
@@ -121,6 +143,7 @@ const emit = defineEmits<Emits>()
 
 const pluginStore = usePluginStore()
 const formRef = ref<FormInstance>()
+const uploadRef = ref<UploadInstance>()
 const loading = ref(false)
 
 // 对话框显示状态
@@ -184,6 +207,91 @@ const validateJson = (field: string, jsonStr: string) => {
   } catch (error) {
     ElMessage.warning(`${field} 格式不正确，请输入有效的 JSON`)
     return false
+  }
+}
+
+// 处理 JSON 文件上传
+const handleFileChange = (file: UploadFile) => {
+  if (!file.raw) {
+    ElMessage.error('文件读取失败')
+    return
+  }
+
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    try {
+      const content = e.target?.result as string
+      const jsonData = JSON.parse(content)
+      
+      // 解析 OpenAPI 规范并填充表单
+      parseAndFillForm(jsonData)
+      
+      ElMessage.success('JSON 文件导入成功')
+    } catch (error) {
+      console.error('JSON 解析失败:', error)
+      ElMessage.error('JSON 文件格式错误，请检查文件内容')
+    }
+  }
+  reader.onerror = () => {
+    ElMessage.error('文件读取失败')
+  }
+  reader.readAsText(file.raw)
+}
+
+// 解析 OpenAPI JSON 并填充表单
+const parseAndFillForm = (jsonData: any) => {
+  // 检查是否是 OpenAPI 规范
+  if (jsonData.openapi || jsonData.swagger) {
+    // 标准 OpenAPI 格式
+    const info = jsonData.info || {}
+    
+    // 填充基本信息
+    if (info.title && !formData.value.name) {
+      formData.value.name = info.title
+    }
+    if (info.description && !formData.value.description) {
+      formData.value.description = info.description
+    }
+    
+    // 从 title 生成 identifier（如果没有填写）
+    if (info.title && !formData.value.identifier) {
+      formData.value.identifier = info.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '')
+        .substring(0, 50)
+    }
+  } else if (jsonData.name) {
+    // 简化格式（直接的插件定义）
+    if (jsonData.name && !formData.value.name) {
+      formData.value.name = jsonData.name
+    }
+    if (jsonData.description && !formData.value.description) {
+      formData.value.description = jsonData.description
+    }
+    if (jsonData.identifier && !formData.value.identifier) {
+      formData.value.identifier = jsonData.identifier
+    }
+  }
+  
+  // 设置完整的 openapiSpec
+  formData.value.openapiSpec = jsonData
+  openapiSpecJson.value = JSON.stringify(jsonData, null, 2)
+  
+  // 解析鉴权配置
+  if (jsonData.components?.securitySchemes) {
+    const schemes = jsonData.components.securitySchemes
+    const schemeKeys = Object.keys(schemes)
+    if (schemeKeys.length > 0) {
+      const firstScheme = schemes[schemeKeys[0]]
+      if (firstScheme.type === 'apiKey') {
+        formData.value.authType = 'api_key'
+      } else if (firstScheme.type === 'oauth2') {
+        formData.value.authType = 'oauth'
+      } else if (firstScheme.scheme === 'bearer') {
+        formData.value.authType = 'api_key'
+      }
+    }
   }
 }
 
@@ -315,6 +423,26 @@ const handleClose = () => {
 </script>
 
 <style scoped>
+.import-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e7ed 100%);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.json-upload {
+  flex-shrink: 0;
+}
+
+.import-tip {
+  font-size: 13px;
+  color: #909399;
+  line-height: 1.5;
+}
+
 .form-tip {
   font-size: 12px;
   color: #909399;

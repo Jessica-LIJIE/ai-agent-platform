@@ -87,6 +87,18 @@
         </div>
         
         <div class="card-footer">
+          <el-button 
+            :type="plugin.isEnabled || plugin.status === 'enabled' ? 'warning' : 'success'" 
+            size="small" 
+            @click="handleToggleStatus(plugin)"
+          >
+            <el-icon><Switch /></el-icon>
+            {{ plugin.isEnabled || plugin.status === 'enabled' ? '禁用' : '启用' }}
+          </el-button>
+          <el-button type="info" size="small" @click="handleTest(plugin)">
+            <el-icon><VideoPlay /></el-icon>
+            测试
+          </el-button>
           <el-button type="primary" size="small" @click="handleEdit(plugin)">
             <el-icon><Edit /></el-icon>
             编辑
@@ -109,13 +121,88 @@
       :plugin="currentPlugin"
       @success="handleDialogSuccess"
     />
+
+    <!-- 插件测试弹窗 -->
+    <el-dialog
+      v-model="testDialogVisible"
+      title="插件测试"
+      width="700px"
+      :close-on-click-modal="false"
+    >
+      <div v-if="testPlugin">
+        <el-descriptions :column="2" border>
+          <el-descriptions-item label="插件名称">{{ testPlugin.name }}</el-descriptions-item>
+          <el-descriptions-item label="状态">
+            <el-tag :type="testPlugin.isEnabled || testPlugin.status === 'enabled' ? 'success' : 'info'">
+              {{ testPlugin.isEnabled || testPlugin.status === 'enabled' ? '已启用' : '已禁用' }}
+            </el-tag>
+          </el-descriptions-item>
+        </el-descriptions>
+
+        <el-divider>选择操作</el-divider>
+        
+        <el-form label-width="100px">
+          <el-form-item label="操作">
+            <el-select v-model="selectedOperation" placeholder="选择要测试的操作" style="width: 100%">
+              <el-option
+                v-for="op in testOperations"
+                :key="op.operationId"
+                :label="`${op.name} (${op.method} ${op.path})`"
+                :value="op.operationId"
+              />
+            </el-select>
+          </el-form-item>
+          
+          <el-form-item label="参数 (JSON)">
+            <el-input
+              v-model="testParams"
+              type="textarea"
+              :rows="4"
+              placeholder='{"sensor": "DHT11_temperature", "uuid": "your-device-uuid"}'
+            />
+          </el-form-item>
+        </el-form>
+
+        <el-divider>测试结果</el-divider>
+        
+        <div v-if="testLoading" class="test-loading">
+          <el-icon class="is-loading"><Loading /></el-icon>
+          <span>调用中...</span>
+        </div>
+        
+        <div v-else-if="testResult" class="test-result">
+          <el-descriptions :column="2" border size="small">
+            <el-descriptions-item label="状态">
+              <el-tag :type="testResult.status === 'success' ? 'success' : 'danger'">
+                {{ testResult.status }}
+              </el-tag>
+            </el-descriptions-item>
+            <el-descriptions-item label="HTTP状态码">{{ testResult.httpStatusCode || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="耗时">{{ testResult.duration }}ms</el-descriptions-item>
+            <el-descriptions-item label="错误信息">{{ testResult.errorMessage || '-' }}</el-descriptions-item>
+          </el-descriptions>
+          
+          <div class="result-body" v-if="testResult.parsedData">
+            <h4>响应数据：</h4>
+            <pre>{{ JSON.stringify(testResult.parsedData, null, 2) }}</pre>
+          </div>
+        </div>
+      </div>
+
+      <template #footer>
+        <el-button @click="testDialogVisible = false">关闭</el-button>
+        <el-button type="primary" :loading="testLoading" @click="executeTest">
+          执行测试
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Search, Edit, Delete, Connection, Document, Link, Clock } from '@element-plus/icons-vue'
+import { Plus, Search, Edit, Delete, Connection, Document, Link, Clock, Switch, VideoPlay, Loading } from '@element-plus/icons-vue'
 import { usePluginStore } from '@/stores/usePluginStore'
 import type { Plugin } from '@/types/entity'
 import PluginDialog from './PluginDialog.vue'
@@ -130,6 +217,15 @@ const filterStatus = ref<string>('')
 const dialogVisible = ref(false)
 // 当前编辑的插件
 const currentPlugin = ref<Plugin | null>(null)
+
+// 测试弹窗相关
+const testDialogVisible = ref(false)
+const testPlugin = ref<Plugin | null>(null)
+const testOperations = ref<any[]>([])
+const selectedOperation = ref('')
+const testParams = ref('')
+const testLoading = ref(false)
+const testResult = ref<any>(null)
 
 // 过滤后的插件列表
 const filteredPluginList = computed(() => {
@@ -223,6 +319,85 @@ const handleDelete = async (plugin: Plugin) => {
 const handleDialogSuccess = () => {
   dialogVisible.value = false
   currentPlugin.value = null
+}
+
+// 切换插件状态
+const handleToggleStatus = async (plugin: Plugin) => {
+  const newStatus = !(plugin.isEnabled || plugin.status === 'enabled')
+  try {
+    await pluginStore.togglePluginStatus(plugin.id!, newStatus)
+    ElMessage.success(newStatus ? '插件已启用' : '插件已禁用')
+  } catch (error: any) {
+    ElMessage.error(error.message || '操作失败')
+  }
+}
+
+// 测试插件
+const handleTest = async (plugin: Plugin) => {
+  testPlugin.value = plugin
+  testResult.value = null
+  selectedOperation.value = ''
+  testParams.value = ''
+  
+  try {
+    // 获取插件详情（包含 operations）
+    const detail = await pluginStore.fetchPluginById(plugin.id!)
+    testOperations.value = detail?.operations || []
+    
+    // 如果只有一个操作，自动选中
+    if (testOperations.value.length === 1) {
+      selectedOperation.value = testOperations.value[0].operationId
+    }
+    
+    testDialogVisible.value = true
+  } catch (error: any) {
+    ElMessage.error(error.message || '获取插件详情失败')
+  }
+}
+
+// 执行测试
+const executeTest = async () => {
+  if (!testPlugin.value || !selectedOperation.value) {
+    ElMessage.warning('请选择要测试的操作')
+    return
+  }
+
+  let params = {}
+  if (testParams.value.trim()) {
+    try {
+      params = JSON.parse(testParams.value)
+    } catch (e) {
+      ElMessage.error('参数格式错误，请输入有效的 JSON')
+      return
+    }
+  }
+
+  testLoading.value = true
+  testResult.value = null
+
+  try {
+    const result = await pluginStore.invokeOperation(
+      testPlugin.value.id!,
+      selectedOperation.value,
+      params
+    )
+    testResult.value = result
+    
+    if (result.status === 'success') {
+      ElMessage.success('调用成功')
+    } else {
+      ElMessage.warning('调用返回错误')
+    }
+  } catch (error: any) {
+    testResult.value = {
+      status: 'error',
+      errorMessage: error.message || '调用失败',
+      duration: 0
+    }
+    ElMessage.error(error.message || '调用失败')
+  } finally {
+    testLoading.value = false
+  }
 }
 
 // 初始化加载数据
@@ -377,6 +552,45 @@ onMounted(async () => {
 
 .card-footer .el-button {
   flex: 1;
+  padding: 8px 4px;
+  font-size: 12px;
+}
+
+/* 测试弹窗样式 */
+.test-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 40px;
+  color: #409eff;
+}
+
+.test-result {
+  background: #f5f7fa;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.result-body {
+  margin-top: 16px;
+}
+
+.result-body h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #303133;
+}
+
+.result-body pre {
+  background: #ffffff;
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
+  padding: 12px;
+  margin: 0;
+  font-size: 13px;
+  overflow-x: auto;
+  max-height: 200px;
 }
 
 /* 响应式设计 */

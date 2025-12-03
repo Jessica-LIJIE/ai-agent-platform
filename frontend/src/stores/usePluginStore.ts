@@ -6,7 +6,10 @@ import {
   getPluginById,
   createPlugin,
   updatePlugin,
-  deletePlugin
+  deletePlugin,
+  updatePluginStatus,
+  getPluginOperations,
+  invokePluginOperation
 } from '@/api'
 
 /**
@@ -99,6 +102,46 @@ export const usePluginStore = defineStore('plugin', () => {
     currentPlugin.value = null
   }
 
+  // 更新插件状态（启用/禁用）
+  const togglePluginStatus = async (id: string, isEnabled: boolean) => {
+    loading.value = true
+    try {
+      await updatePluginStatus(id, isEnabled)
+      // 刷新列表
+      await fetchPluginList()
+    } catch (error) {
+      console.error('更新插件状态失败:', error)
+      throw error
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // 获取插件操作列表
+  const fetchPluginOperations = async (pluginId: string) => {
+    try {
+      return await getPluginOperations(pluginId)
+    } catch (error) {
+      console.error('获取插件操作失败:', error)
+      throw error
+    }
+  }
+
+  // 调用插件操作
+  const invokeOperation = async (
+    pluginId: string,
+    operationId: string,
+    params: Record<string, any>,
+    timeout?: number
+  ) => {
+    try {
+      return await invokePluginOperation(pluginId, operationId, params, timeout)
+    } catch (error) {
+      console.error('调用插件操作失败:', error)
+      throw error
+    }
+  }
+
   return {
     // 状态
     pluginList,
@@ -110,7 +153,10 @@ export const usePluginStore = defineStore('plugin', () => {
     addPlugin,
     editPlugin,
     removePlugin,
-    resetCurrentPlugin
+    resetCurrentPlugin,
+    togglePluginStatus,
+    fetchPluginOperations,
+    invokeOperation
   }
 })
 

@@ -35,7 +35,8 @@ http.interceptors.response.use(
     const payload = response.data
     // 按后端统一结构解包
     if (payload && typeof payload === 'object' && 'code' in payload && 'data' in payload) {
-      if (payload.code === 0) return payload.data
+      // 兼容 code === 0 或 code === 200 都表示成功
+      if (payload.code === 0 || payload.code === 200) return payload.data
       const err = new Error(payload.message || '业务失败') as any
       err.code = payload.code
       err.response = response

@@ -199,6 +199,8 @@ CREATE TABLE IF NOT EXISTS `ai_agent_platform_db`.`plugin` (
     `name` VARCHAR(100) NOT NULL COMMENT '插件名称',
     `identifier` VARCHAR(100) DEFAULT NULL COMMENT '插件唯一标识符（key）',
     `description` TEXT DEFAULT NULL COMMENT '插件描述',
+    `type` VARCHAR(20) NOT NULL DEFAULT 'http' COMMENT '插件类型（http/mqtt/local等）',
+    `base_url` VARCHAR(255) DEFAULT NULL COMMENT '基础请求地址（如 https://plugin.aiot.hello1023.com）',
     `openapi_spec` JSON NOT NULL COMMENT 'OpenAPI规范内容',
     `openapi_schema` JSON DEFAULT NULL COMMENT 'OpenAPI规范（别名字段）',
     `status` VARCHAR(20) NOT NULL DEFAULT 'disabled' COMMENT '插件状态（enabled/disabled）',
@@ -217,7 +219,29 @@ CREATE TABLE IF NOT EXISTS `ai_agent_platform_db`.`plugin` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='插件表';
 
 -- ============================================================
--- 9. 系统日志表 (system_log)
+-- 9. 插件操作表 (plugin_operation)
+-- 功能: 存储每个插件的接口操作信息
+-- 关联用户故事: US-014, US-015, US-016
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `ai_agent_platform_db`.`plugin_operation` (
+    `id` VARCHAR(64) NOT NULL COMMENT '插件操作唯一标识',
+    `plugin_id` VARCHAR(64) NOT NULL COMMENT '所属插件ID',
+    `operation_id` VARCHAR(100) NOT NULL COMMENT 'OpenAPI中的operationId（如getSensorData）',
+    `name` VARCHAR(100) NOT NULL COMMENT '操作名称，用于前端展示',
+    `method` VARCHAR(10) NOT NULL COMMENT 'HTTP方法（GET/POST/PUT/DELETE等）',
+    `path` VARCHAR(255) NOT NULL COMMENT '请求路径（如/plugin/sensor-data）',
+    `description` TEXT DEFAULT NULL COMMENT '操作描述',
+    `input_schema` JSON DEFAULT NULL COMMENT '入参结构（从OpenAPI解析的参数信息）',
+    `output_schema` JSON DEFAULT NULL COMMENT '出参结构（从OpenAPI解析的响应信息）',
+    `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_plugin_id` (`plugin_id`),
+    CONSTRAINT `fk_operation_plugin` FOREIGN KEY (`plugin_id`) REFERENCES `plugin` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='插件操作表';
+
+-- ============================================================
+-- 10. 系统日志表 (system_log)
 -- 功能: 存储系统操作日志及审计信息
 -- 关联用户故事: US-023
 -- ============================================================
@@ -238,7 +262,7 @@ CREATE TABLE IF NOT EXISTS `ai_agent_platform_db`.`system_log` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统日志表';
 
 -- ============================================================
--- 10. 系统配置表 (system_config)
+-- 11. 系统配置表 (system_config)
 -- 功能: 存储系统全局配置信息
 -- 关联用户故事: US-022
 -- ============================================================
@@ -254,7 +278,7 @@ CREATE TABLE IF NOT EXISTS `ai_agent_platform_db`.`system_config` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统配置表';
 
 -- ============================================================
--- 11. LLM提供商表 (llm_providers)
+-- 12. LLM提供商表 (llm_providers)
 -- 功能: 存储LLM提供商信息
 -- 关联用户故事: US-022
 -- ============================================================
@@ -281,7 +305,7 @@ CREATE TABLE IF NOT EXISTS `ai_agent_platform_db`.`llm_providers` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='LLM提供商表';
 
 -- ============================================================
--- 12. LLM模型表 (llm_models)
+-- 13. LLM模型表 (llm_models)
 -- 功能: 存储LLM模型配置信息
 -- 关联用户故事: US-022
 -- ============================================================

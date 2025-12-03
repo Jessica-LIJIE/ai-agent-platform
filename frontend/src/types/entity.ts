@@ -56,6 +56,15 @@ export interface ConversationMetadata {
 }
 
 /**
+ * 插件调用信息
+ */
+export interface PluginCall {
+  pluginId: string
+  operationId: string
+  params: Record<string, any>
+}
+
+/**
  * 智能体对话历史实体
  */
 export interface AgentConversation {
@@ -68,6 +77,7 @@ export interface AgentConversation {
   metadata?: ConversationMetadata
   conversationType?: string // chat/debug
   createTime?: string
+  pluginCall?: PluginCall  // 插件调用信息
 }
 
 /**
